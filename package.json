@@ -7,11 +7,15 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@fastify/express": "^4.0.5",
     "express": "^5.2.1",
     "fastify": "^5.8.5"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
   }
 }

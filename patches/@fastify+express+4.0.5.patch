@@ -1,0 +1,40 @@
+diff --git a/node_modules/@fastify/express/index.js b/node_modules/@fastify/express/index.js
+index 4c4e6b5..2a1e980 100644
+--- a/node_modules/@fastify/express/index.js
++++ b/node_modules/@fastify/express/index.js
+@@ -2,8 +2,13 @@
+ 
+ const fp = require('fastify-plugin')
+ const Express = require('express')
++const { OutgoingMessage } = require('node:http')
+ const kMiddlewares = Symbol('fastify-express-middlewares')
+ 
++const nativeHeadersSentGetter = Object.getOwnPropertyDescriptor(
++  OutgoingMessage.prototype, 'headersSent'
++).get
++
+ function fastifyExpress (fastify, options, next) {
+   const {
+     expressHook = 'onRequest',
+@@ -60,12 +65,21 @@ function fastifyExpress (fastify, options, next) {
+     req.raw.ips = req.ips
+     req.raw.log = req.log
+     reply.raw.log = req.log
++    let sendInitiated = false
++
+     reply.raw.send = function send (...args) {
+       // Restore req.raw.url to its original value https://github.com/fastify/fastify-express/issues/11
+       req.raw.url = normalizedUrl
++      sendInitiated = true
+       return reply.send.apply(reply, args)
+     }
+ 
++    Object.defineProperty(reply.raw, 'headersSent', {
++      get () {
++        return sendInitiated || nativeHeadersSentGetter.call(this)
++      }
++    })
++
+     // backward compatibility for body-parser
+     if (req.body) {
+       req.raw.body = req.body
